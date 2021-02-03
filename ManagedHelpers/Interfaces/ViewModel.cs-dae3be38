@@ -1,0 +1,83 @@
+using System;
+using System.ComponentModel;
+using System.Windows;
+
+namespace ManagedHelpers.Interfaces
+{
+    public class ViewModel:DocumentViewModel
+    {
+        private FrameworkElement view;
+
+        public new virtual FrameworkElement View
+        {
+            get { return view; }
+            set
+            {
+                if (view != null)
+                {
+                    view.Loaded -= OnLoaded;
+                }
+                view = value;
+                base.View = value;
+                OnViewSet();
+                if (view != null)
+                {
+                    view.DataContext = this;
+                    view.Loaded += OnLoaded;
+                }
+            }
+        }
+
+        protected virtual void CloseWindow(bool? dialogResult)
+        {
+            var window = Window.GetWindow(View);
+            if (window != null)
+            {
+                if (dialogResult.HasValue)
+                {
+                    window.DialogResult = dialogResult;
+                }
+                window.Close();
+            }
+        }
+
+        protected virtual void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var window = Window.GetWindow(View);
+            if (window != null)
+            {
+                window.Closed -= OnWindowClosed;
+                window.Closed += OnWindowClosed;
+                window.Closing -= OnWindowClosing;
+                window.Closing += OnWindowClosing;
+            }
+
+        }
+
+        protected virtual void OnWindowClosing(object sender, CancelEventArgs e)
+        {
+
+        }
+
+        protected virtual void OnWindowClosed(object sender, EventArgs e)
+        {
+
+        }
+
+        protected virtual void OnViewSet()
+        {
+
+        }
+
+        public override string Title
+        {
+            get { return String.Empty; }
+        }
+
+        public override void Deinitialize()
+        {
+
+        }
+
+    }
+}

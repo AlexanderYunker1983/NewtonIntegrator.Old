@@ -1,0 +1,202 @@
+using System;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Shapes;
+
+namespace ManagedHelpers.Controls
+{
+    public abstract class ViewboxShape : Shape
+    {
+        Matrix transform;
+        Pen strokePen;
+        Geometry definingGeometry;
+        Geometry renderGeometry;
+
+        static ViewboxShape()
+        {
+            StretchProperty.OverrideMetadata(typeof(ViewboxShape), new FrameworkPropertyMetadata
+                                                                   {
+                                                                       AffectsRender = true,
+                                                                       DefaultValue = Stretch.Fill,
+                                                                   });
+        }
+
+        // The built-in shapes compute stretching using the actual bounds of the geometry.
+        // ViewBoxShape and its subclasses use this Viewbox instead and ignore the actual bounds of the geometry.
+        public Rect Viewbox { get { return (Rect)GetValue(ViewboxProperty); } set { SetValue(ViewboxProperty, value); } }
+        public static readonly DependencyProperty ViewboxProperty = DependencyProperty.Register("Viewbox", typeof(Rect), typeof(ViewboxShape), new UIPropertyMetadata
+                                                                                                                                               {
+                                                                                                                                                   DefaultValue = new Rect(0, 0, 1, 1),
+                                                                                                                                               });
+
+        // If defined, replaces all the Stroke* properties with a single Pen
+        public Pen Pen { get { return (Pen)GetValue(PenProperty); } set { SetValue(PenProperty, value); } }
+        public static readonly DependencyProperty PenProperty = DependencyProperty.Register("Pen", typeof(Pen), typeof(ViewboxShape));
+
+        // Subclasses override this to define geometry if caching is desired, or just override DefiningGeometry
+        protected virtual Geometry ComputeDefiningGeometry()
+        {
+            return null;
+        }
+
+        // Subclasses can use this PropertyChangedCallback for properties that affect the defining geometry
+        protected static void OnGeometryChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            var shape = sender as ViewboxShape;
+            if (shape != null)
+            {
+                shape.definingGeometry = null;
+                shape.renderGeometry = null;
+            }
+        }
+
+        // Compute viewport from box & constraint
+        private Size ApplyStretch(Stretch stretch, Rect box, Size constraint)
+        {
+            double uniformScale;
+            switch (stretch)
+            {
+                default:
+                    return new Size(box.Width, box.Height);
+
+                case Stretch.Fill:
+                    return constraint;
+
+                case Stretch.Uniform:
+                    uniformScale = Math.Min(constraint.Width / box.Width, constraint.Height / box.Height);
+                    break;
+
+                case Stretch.UniformToFill:
+                    uniformScale = Math.Max(constraint.Width / box.Width, constraint.Height / box.Height);
+                    break;
+            }
+            return new Size(uniformScale * box.Width, uniformScale * box.Height);
+        }
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            // Clear pen cache if settings have changed
+            if (strokePen != null)
+                if (Pen != null)
+                    strokePen = null;
+                else
+                    if (strokePen.Thickness != StrokeThickness ||
+                        strokePen.Brush != Stroke ||
+                        strokePen.StartLineCap != StrokeStartLineCap ||
+                        strokePen.EndLineCap != StrokeEndLineCap ||
+                        strokePen.DashCap != StrokeDashCap ||
+                        strokePen.LineJoin != StrokeLineJoin ||
+                        strokePen.MiterLimit != StrokeMiterLimit ||
+                        strokePen.DashStyle.Dashes != StrokeDashArray ||
+                        strokePen.DashStyle.Offset != StrokeDashOffset)
+                        strokePen = null;
+
+            definingGeometry = null;
+            renderGeometry = null;
+
+            return ApplyStretch(Stretch, Viewbox, constraint);
+        }
+
+        protected override Size ArrangeOverride(Size availableSize)
+        {
+            Stretch stretch = Stretch;
+            Size viewport;
+            Matrix transform;
+
+            // Compute new viewport and transform
+            if (stretch == Stretch.None)
+            {
+                viewport = availableSize;
+                transform = Matrix.Identity;
+            }
+            else
+            {
+                Rect box = Viewbox;
+                viewport = ApplyStretch(stretch, box, availableSize);
+
+                double scaleX = viewport.Width / box.Width;
+                double scaleY = viewport.Height / box.Height;
+                transform = new Matrix(scaleX, 0, 0, scaleY, -box.Left * scaleX, -box.Top * scaleY);
+            }
+
+            if (this.transform != transform)
+            {
+                this.transform = transform;
+                renderGeometry = null;
+                InvalidateArrange();
+            }
+            return viewport;
+        }
+
+        protected Pen PenOrStroke
+        {
+            get
+            {
+                if (Pen != null)
+                    return Pen;
+                if (strokePen == null)
+                    strokePen = new Pen
+                                {
+                                    Thickness = StrokeThickness,
+                                    Brush = Stroke,
+                                    StartLineCap = StrokeStartLineCap,
+                                    EndLineCap = StrokeEndLineCap,
+                                    DashCap = StrokeDashCap,
+                                    LineJoin = StrokeLineJoin,
+                                    MiterLimit = StrokeMiterLimit,
+                                    DashStyle =
+                                        StrokeDashArray.Count == 0 && StrokeDashOffset == 0 ? DashStyles.Solid :
+                                                                                                                   new DashStyle(StrokeDashArray, StrokeDashOffset),
+                                };
+                return strokePen;
+            }
+        }
+
+        protected Matrix Transform
+        {
+            get
+            {
+                return transform;
+            }
+        }
+
+        protected override Geometry DefiningGeometry
+        {
+            get
+            {
+                if (definingGeometry == null)
+                    definingGeometry = ComputeDefiningGeometry();
+                return definingGeometry;
+            }
+        }
+
+        protected Geometry RenderGeometry
+        {
+            get
+            {
+                if (renderGeometry == null)
+                {
+                    Geometry defining = DefiningGeometry;
+                    if (transform == Matrix.Identity || defining == Geometry.Empty)
+                        renderGeometry = defining;
+                    else
+                    {
+                        Geometry geo = defining.CloneCurrentValue();
+                        if (object.ReferenceEquals(geo, defining)) geo = defining.Clone();
+
+                        geo.Transform = new MatrixTransform(
+                            geo.Transform == null ? transform : geo.Transform.Value * transform);
+                        renderGeometry = geo;
+                    }
+                }
+                return renderGeometry;
+            }
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            drawingContext.DrawGeometry(Fill, PenOrStroke, RenderGeometry);
+        }
+
+    }
+}

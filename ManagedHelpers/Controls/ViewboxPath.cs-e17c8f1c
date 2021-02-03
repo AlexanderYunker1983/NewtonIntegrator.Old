@@ -1,0 +1,22 @@
+using System.Windows;
+using System.Windows.Markup;
+using System.Windows.Media;
+
+namespace ManagedHelpers.Controls
+{
+    [ContentProperty("Data")]
+    public class ViewboxPath : ViewboxShape
+    {
+        public Geometry Data { get { return (Geometry)GetValue(DataProperty); } set { SetValue(DataProperty, value); } }
+        public static readonly DependencyProperty DataProperty = DependencyProperty.Register("Data", typeof(Geometry), typeof(ViewboxPath), new UIPropertyMetadata
+                                                                                                                                            {
+                                                                                                                                                DefaultValue = Geometry.Empty,
+                                                                                                                                                PropertyChangedCallback = OnGeometryChanged,
+                                                                                                                                            });
+
+        protected override Geometry DefiningGeometry
+        {
+            get { return Data ?? Geometry.Empty; }
+        }
+    }
+}

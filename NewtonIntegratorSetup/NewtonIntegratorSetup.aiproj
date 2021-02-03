@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">All</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{b4f2d9b3-df91-40ce-abcb-cf2d1c3e683f}</ProjectGuid>
+    <OutputType>msi</OutputType>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>NewtonIntegratorSetup.aip</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <IsWindowsApplication>True</IsWindowsApplication>
+    <AssemblyName>NewtonIntegratorSetup</AssemblyName>
+    <Name>NewtonIntegratorSetup</Name>
+    <RootNamespace>NewtonIntegratorSetup</RootNamespace>
+    <AdvinstCmdLine>-buildslist All</AdvinstCmdLine>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'All' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>msi\</OutputPath>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'DefaultBuild' " />
+  <!--Search foe the AI path in the registry. If the AI version used to create the project is not present, use the latest version-->
+  <Choose>
+    <When Condition="Exists('$(registry:HKEY_CURRENT_USER\SOFTWARE\Caphyon\Advanced Installer\Extension for VS@9.9)bin\x86\AdvancedInstaller.com')">
+      <PropertyGroup>
+        <AiComPath>$(registry:HKEY_CURRENT_USER\SOFTWARE\Caphyon\Advanced Installer\Extension for VS@9.9)bin\x86\AdvancedInstaller.com</AiComPath>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <AiComPath>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Caphyon\Advanced Installer@Advanced Installer Path)bin\x86\AdvancedInstaller.com</AiComPath>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+  <ItemGroup>
+    <Compile Include="NewtonIntegratorSetup.aip">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Target Name="Build">
+    <!--Create the output directory-->
+    <!-- <MakeDir Directories="$(OutputPath)"  Condition="!Exists('$(OutputPath)')" /> -->
+    <!-- Run the advanced installer on the .aip project - build -->
+    <!-- Path to the Advanced Installer version used to build .aip is specified in the registry HKEY_CURRENT_USER\SOFTWARE\Caphyon\Advanced Installer\Extension for VS -->
+    <Exec Condition="Exists(%(Compile.Identity)) AND '$(Configuration)'=='All'" Command="&quot;$(AiComPath)&quot; /build &quot;%(Compile.Identity)&quot;" />
+    <Exec Condition="Exists(%(Compile.Identity)) AND '$(Configuration)'!='All'" Command="&quot;$(AiComPath)&quot; /build &quot;%(Compile.Identity)&quot; -buildslist $(Configuration)" />
+  </Target>
+  <Target Name="Rebuild">
+    <!--Create the output directory-->
+    <!-- MakeDir Directories="$(OutputPath)"  Condition="!Exists('$(OutputPath)')" /> -->
+    <!-- Run the advanced installer on the .aip project - rebuild -->
+    <Exec Condition="Exists(%(Compile.Identity)) AND '$(Configuration)'=='All'" Command="&quot;$(AiComPath)&quot; /rebuild &quot;%(Compile.Identity)&quot;" />
+    <Exec Condition="Exists(%(Compile.Identity)) AND '$(Configuration)'!='All'" Command="&quot;$(AiComPath)&quot; /rebuild &quot;%(Compile.Identity)&quot; -buildslist $(Configuration)" />
+  </Target>
+  <Target Name="Clean">
+  </Target>
+  <Target Name="ResolveAssemblyReferences">
+  </Target>
+</Project>

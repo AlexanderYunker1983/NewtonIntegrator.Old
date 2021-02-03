@@ -1,0 +1,7 @@
+﻿namespace ManagedHelpers
+{
+    public interface IResourceManager
+    {
+        string GetString(string key, params object[] parameters);
+    }
+}

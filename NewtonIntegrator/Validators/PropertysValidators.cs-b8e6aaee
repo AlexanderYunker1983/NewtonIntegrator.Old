@@ -1,0 +1,45 @@
+﻿using System;
+using System.Globalization;
+using System.Threading;
+using System.Windows.Controls;
+
+namespace NewtonIntegrator.Validators
+{
+    public class PropertysValidator : ValidationRule
+    {
+        private double min = 0;
+        private double max = 1e5;
+
+        public double Min
+        {
+            get { return min; }
+            set { min = value; }
+        }
+
+        public double Max
+        {
+            get { return max; }
+            set { max = value; }
+        }
+
+        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
+        {
+            cultureInfo = new CultureInfo("ru-RU");
+            Thread.CurrentThread.CurrentCulture = cultureInfo;
+            Thread.CurrentThread.CurrentUICulture = cultureInfo;
+            double result;
+            var canParse = double.TryParse((string)value,NumberStyles.AllowDecimalPoint, new CultureInfo("en-US"), out result);
+            if (!canParse)
+            {
+                return new ValidationResult(false,
+                  "Not a double value");
+            }
+            if ((result < Min) || (result > Max))
+            {
+                return new ValidationResult(false,
+                  "Please enter in the range: " + Min + " - " + Max + ".");
+            }
+            return new ValidationResult(true, null);
+        }
+    }
+}

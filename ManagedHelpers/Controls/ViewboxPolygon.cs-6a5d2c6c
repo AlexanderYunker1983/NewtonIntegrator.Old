@@ -1,0 +1,15 @@
+using System.Windows;
+
+namespace ManagedHelpers.Controls
+{
+    public class ViewboxPolygon : ViewboxPolyline
+    {
+        static ViewboxPolygon()
+        {
+            CloseFigureProperty.OverrideMetadata(typeof(ViewboxPolygon), new FrameworkPropertyMetadata
+                                                                         {
+                                                                             DefaultValue = true,
+                                                                         });
+        }
+    }
+}

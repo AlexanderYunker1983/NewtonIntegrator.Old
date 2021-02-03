@@ -1,0 +1,268 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace ManagedHelpers
+{
+    /*
+     * Класс предназначен для преобразования даты-времени между локальным временем и UTC.
+     * Все существующие версии Windows (на данный момент последней является Windows 7)
+     * попросту не поддерживают корректное преобразование для прошлых периодов времени,
+     * если было изменено базовое смещение от UTC, что имело место в России в 2011 г.
+     * Для корректного преобразования даты-времени везде в .NET-коде следует избегать
+     * стандартных преобразований и использовать вместо них методы класса DateTimeMagic.
+     * Правила следующие:
+     * 1. Вместо DateTime.ToLocalTime() и DateTimeOffset.ToLocalTime() использовать DateTimeMagic.LocalToUtc()
+     * 2. Вместо DateTime.ToUniversalTime() и DateTimeOffset.ToUniversalTime() использовать DateTimeMagic.UtcToLocal()
+     * 3. Не использовать неявные преобразования из DateTime в DateTimeOffset (при присваивании, при передаче
+     *    параметров). Вместо этого использовать явное преобразование при помощи DateTimeMagic.ToDateTimeOffset()
+     * 4. Не использовать конструктор DateTimeOffset c параметром DateTime.
+     *    Вместо DateTimeOffset offset = new DateTimeOffset(new DateTime(....));
+     *    Нужно писать DateTimeOffset offset = DateTimeMagic.ToDateTimeOffset(new DateTime(....));
+     * 5. Если мы получаем от Framework объект DateTime с локальным временем, вычисленным по системным
+     *    правилам (например, при работе с веб-службой), мы должны перобразовать его в правильное
+     *    локальное время при помощи DateTimeMagic.CorrectSystemLocalTime()
+     * */
+
+    public static class DateTimeMagic
+    {
+        private static TimeZoneInfo m_CustomRussianTimeZone = null;
+        private static int m_CurrentZoneMinusMsk = 1000;
+
+        static DateTimeMagic()
+        {
+            string [] russianTimeZoneNames = new string []
+            {
+                "Russian Standard Time",
+                "Ekaterinburg Standard Time", 
+                "N. Central Asia Standard Time",
+                "North Asia Standard Time",
+                "North Asia East Standard Time",
+                "Yakutsk Standard Time",
+                "Vladivostok Standard Time",
+                "Magadan Standard Time",
+                "Central Pacific Standard Time"
+            };
+
+            if (russianTimeZoneNames.Contains(TimeZoneInfo.Local.Id))
+            {
+                m_CurrentZoneMinusMsk = TimeZoneInfo.Local.BaseUtcOffset.Hours -
+                    (int)TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time").BaseUtcOffset.TotalHours;
+
+                TimeSpan oneHour = new TimeSpan(1, 0, 0);
+                TimeSpan minusOneHour = new TimeSpan(-1, 0, 0);
+                DateTime _00_00 = new DateTime(1, 1, 1, 0, 0, 0);
+                DateTime _02_00 = new DateTime(1, 1, 1, 2, 0, 0);
+                DateTime _03_00 = new DateTime(1, 1, 1, 3, 0, 0);
+                DateTime _23_00 = new DateTime(1, 1, 1, 23, 0, 0);
+                DateTime endOfDay = new DateTime(1, 1, 1, 23, 59, 59, 999);
+                TimeZoneInfo.AdjustmentRule adjustment;
+                List<TimeZoneInfo.AdjustmentRule> adjustmentList = new List<TimeZoneInfo.AdjustmentRule>();
+                TimeZoneInfo.TransitionTime transitionRuleStart, transitionRuleEnd;
+
+                // 1981-1983, на летнее 01.04 00:00, на зимнее 01.10 00:00
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_00_00, 4, 1);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_00_00, 10, 1);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(1981, 1, 1),
+                    new DateTime(1983, 12, 31), oneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                // 1984, на летнее 01.04 00:00, на зимнее 30.09 03:00
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_00_00, 4, 1);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_03_00, 9, 30);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(1984, 1, 1),
+                    new DateTime(1984, 12, 31), oneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                // 1985-1990, на летнее последнее воскр. марта 02:00, на зимнее последнее воскр. сентября 03:00
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(_02_00, 3, 5,
+                    DayOfWeek.Sunday);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(_03_00, 9, 5,
+                    DayOfWeek.Sunday);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(1985, 1, 1),
+                    new DateTime(1990, 12, 31), oneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                // 31.03.1991 02:00 введение летнего времени, отмена декретного времени +03:00
+                // 29.09.1991 03:00 отмена летн. времени, переход к поясному времени +02:00
+                // 19.01.1992 02:00 введение исчисления времени "поясное время плюс 1 час"
+                //                  (фактический возврат декретного времени) +03:00
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_03_00, 9, 29);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_02_00, 1, 19);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(1991, 9, 1),
+                    new DateTime(1992, 1, 31), minusOneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                // 1992, на летнее 28.03 23:00, на зимнее 26.09 23:00
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_23_00, 3, 28);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFixedDateRule(_23_00, 9, 26);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(1992, 2, 1),
+                    new DateTime(1992, 12, 31), oneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                // 1993-2010, на летнее последнее воскр. марта 02:00, на зимнее последнее воскр. октября 03:00
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(_02_00, 3, 5,
+                    DayOfWeek.Sunday);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(_03_00, 10, 5,
+                    DayOfWeek.Sunday);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(1993, 1, 1),
+                    new DateTime(2010, 12, 31), oneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                // 2011, на летнее последнее воскр. марта 02:00, на зимнее не вернулись
+                transitionRuleStart = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(_02_00, 3, 5,
+                    DayOfWeek.Sunday);
+                transitionRuleEnd = TimeZoneInfo.TransitionTime.CreateFixedDateRule(endOfDay, 12, 31);
+                adjustment = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(new DateTime(2011, 1, 1),
+                    new DateTime(2011, 12, 31), oneHour, transitionRuleStart, transitionRuleEnd);
+                adjustmentList.Add(adjustment);
+
+                string name = "Custom Russian Time";
+                m_CustomRussianTimeZone = TimeZoneInfo.CreateCustomTimeZone(name, new TimeSpan(3, 0, 0),
+                    name, name, name, adjustmentList.ToArray());
+            }
+        }
+
+        public static DateTime UtcToLocal(this DateTime utc)
+        {
+            if (utc.Kind != DateTimeKind.Utc)
+            {
+                return utc;
+            }
+            if (m_CustomRussianTimeZone != null)
+            {
+                DateTime mskLocalTime;
+
+                if (utc.Year >= 2012)
+                {
+                    mskLocalTime = new DateTime(utc.AddHours(4).Ticks, DateTimeKind.Unspecified);
+                }
+                else
+                {
+                    mskLocalTime = TimeZoneInfo.ConvertTime(utc, TimeZoneInfo.Utc, m_CustomRussianTimeZone);
+                }
+                return mskLocalTime.AddHours(m_CurrentZoneMinusMsk);
+            }
+            else
+            {
+                return utc.ToLocalTime();
+            }
+        }
+
+        public static DateTime LocalToUtc(this DateTime local)
+        {
+            if (local.Kind == DateTimeKind.Utc)
+            {
+                return local;
+            }
+            if (m_CustomRussianTimeZone != null)
+            {
+                if (local.Kind == DateTimeKind.Local)
+                {
+                    local = new DateTime(local.Ticks, DateTimeKind.Unspecified);
+                }
+                if (local.Year >= 2012)
+                {
+                    return new DateTime(local.AddHours(-(4 + m_CurrentZoneMinusMsk)).Ticks, DateTimeKind.Utc);
+                }
+                else
+                {
+                    return TimeZoneInfo.ConvertTime(local.AddHours(-m_CurrentZoneMinusMsk),
+                        m_CustomRussianTimeZone, TimeZoneInfo.Utc);
+                }
+            }
+            else
+            {
+                return local.ToUniversalTime();
+            }
+        }
+
+        public static DateTimeOffset LocalToUtc(this DateTimeOffset local)
+        {
+            if (m_CustomRussianTimeZone != null)
+            {
+                if (local.Offset.Ticks == 0)
+                {
+                    return local;
+                }
+                return new DateTimeOffset(LocalToUtc(local.DateTime).Ticks, TimeSpan.Zero);
+            }
+            else
+            {
+                return local.ToUniversalTime();
+            }
+        }
+
+        public static DateTimeOffset UtcToLocal(this DateTimeOffset utc)
+        {
+            if (m_CustomRussianTimeZone != null)
+            {
+                if (utc.Offset.Ticks != 0)
+                {
+                    return utc;
+                }
+                DateTime local = UtcToLocal(utc.UtcDateTime);
+                return new DateTimeOffset(local.Ticks, local - utc.UtcDateTime);
+            }
+            else
+            {
+                return utc.ToLocalTime();
+            }
+        }
+
+        public static DateTimeOffset ToDateTimeOffset(this DateTime dateTime)
+        {
+            if (m_CustomRussianTimeZone == null || dateTime.Kind == DateTimeKind.Utc)
+            {
+                return new DateTimeOffset(dateTime);
+            }
+            else
+            {
+                return new DateTimeOffset(dateTime.Ticks, dateTime - LocalToUtc(dateTime));
+            }
+        }
+
+        public static DateTimeOffset? ToDateTimeOffset(this DateTime? dateTime)
+        {
+            if (!dateTime.HasValue)
+            {
+                return null;
+            }
+            return ToDateTimeOffset(dateTime.Value);
+        }
+
+        // local - локальное время, вычисленное системой (возможно, неправильно)
+        public static DateTime CorrectSystemLocalTime(this DateTime local)
+        {
+            if (local.Kind == DateTimeKind.Local)
+            {
+                return UtcToLocal(local.ToUniversalTime());
+            }
+            return local;
+        }
+
+        public static DateTimeOffset CorrectSystemLocalTimeAsOffset(this DateTime local)
+        {
+            return ToDateTimeOffset(CorrectSystemLocalTime(local));
+        }
+
+        public static bool IsOsConvertsTimeIncorrect
+        {
+            get
+            {
+                if (m_CustomRussianTimeZone != null)
+                {
+                    Version osVersion = System.Environment.OSVersion.Version;
+                    if (System.Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                        ((osVersion.Major == 5 && (osVersion.Minor == 1 || osVersion.Minor == 2)) ||
+                         (osVersion.Major == 6 && osVersion.Minor <= 1)))
+                    {
+                        return !Utils.IsHotFixInstalled("KB2633952");
+                    }
+                }
+                return false;
+            }
+        }
+    }
+} // namespace Helpers

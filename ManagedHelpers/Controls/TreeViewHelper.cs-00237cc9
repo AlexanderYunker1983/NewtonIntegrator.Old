@@ -1,0 +1,106 @@
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Controls;
+using System.Linq;
+
+namespace ManagedHelpers.Controls
+{
+    public class TreeViewHelper
+    {
+
+        private static readonly Dictionary<DependencyObject, TreeViewSelectedItemBehavior> Behaviors =
+            new Dictionary<DependencyObject, TreeViewSelectedItemBehavior>();
+
+        public static object GetSelectedItem(DependencyObject obj)
+        {
+            return obj.GetValue(SelectedItemProperty);
+        }
+
+        public static void SetSelectedItem(DependencyObject obj, object value)
+        {
+            obj.SetValue(SelectedItemProperty, value);
+        }
+
+        public static readonly DependencyProperty SelectedItemProperty =
+            DependencyProperty.RegisterAttached("SelectedItem", typeof (object), typeof (TreeViewHelper),
+                                        new PropertyMetadata(new object(), OnSelectedItemChanged));
+
+        private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(d is TreeView))
+            {
+                return;
+            }
+            if (!Behaviors.ContainsKey(d))
+            {
+                Behaviors.Add(d, new TreeViewSelectedItemBehavior(d as TreeView));
+            }
+            var view = Behaviors[d];
+            view.ChangeSelectedItem(e.NewValue);
+        }
+
+        private class TreeViewSelectedItemBehavior
+        {
+            private readonly TreeView view;
+            Panel itemsHost;
+
+            public TreeViewSelectedItemBehavior(TreeView view)
+            {
+                this.view = view;
+                GetItemsHost();
+                view.SelectedItemChanged += (sender, e) => SetSelectedItem(view, e.NewValue);
+            }
+
+            private void GetItemsHost()
+            {
+                if (view == null)
+                {
+                    return;
+                }
+                var itemsHostProperty = view.GetType().GetProperty("ItemsHost",
+                                                                   BindingFlags.NonPublic | BindingFlags.Instance);
+                if (itemsHostProperty == null)
+                {
+                    return;
+                }
+                itemsHost = itemsHostProperty.GetValue(view, null) as Panel;
+            }
+
+            internal void ChangeSelectedItem(object p)
+            {
+                if (p == null)
+                {
+                    foreach (var item in view.Items.OfType<TreeViewItem>())
+                    {
+                        item.IsSelected = false;
+                    }
+                }
+                if (itemsHost == null)
+                {
+                    return;
+                }
+                foreach (var treeItem in itemsHost.Children.OfType<TreeViewItem>())
+                {
+                    if (WalkTreeViewItem(treeItem, p))
+                    {
+                        break;
+                    }
+                }
+//                var item = (TreeViewItem) view.ItemContainerGenerator.ContainerFromItem(p);
+//                item.IsSelected = true;
+            }
+
+            static bool WalkTreeViewItem(TreeViewItem treeViewItem, object selectedItem)
+            {
+                if (treeViewItem.DataContext == selectedItem)
+                {
+                    treeViewItem.IsSelected = true;
+                    treeViewItem.Focus();
+                    return true;
+                }
+                return treeViewItem.Items.OfType<TreeViewItem>().Any(item => WalkTreeViewItem(item, selectedItem));
+            }
+        }
+    }
+}

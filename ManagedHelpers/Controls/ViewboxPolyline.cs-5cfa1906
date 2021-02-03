@@ -1,0 +1,54 @@
+using System.Linq;
+using System.Windows;
+using System.Windows.Markup;
+using System.Windows.Media;
+
+namespace ManagedHelpers.Controls
+{
+    [ContentProperty("Points")]
+    public class ViewboxPolyline : ViewboxShape
+    {
+        public ViewboxPolyline()
+        {
+            Points = new PointCollection();
+        }
+
+        public PointCollection Points { get { return (PointCollection)GetValue(PointsProperty); } set { SetValue(PointsProperty, value); } }
+        public static readonly DependencyProperty PointsProperty = DependencyProperty.Register("Points", typeof(PointCollection), typeof(ViewboxPolyline), new FrameworkPropertyMetadata
+                                                                                                                                                           {
+                                                                                                                                                               PropertyChangedCallback = OnGeometryChanged,
+                                                                                                                                                               AffectsRender = true,
+                                                                                                                                                           });
+
+        public FillRule FillRule { get { return (FillRule)GetValue(FillRuleProperty); } set { SetValue(FillRuleProperty, value); } }
+        public static readonly DependencyProperty FillRuleProperty = DependencyProperty.Register("FillRule", typeof(FillRule), typeof(ViewboxPolyline), new FrameworkPropertyMetadata
+                                                                                                                                                        {
+                                                                                                                                                            DefaultValue = FillRule.EvenOdd,
+                                                                                                                                                            PropertyChangedCallback = OnGeometryChanged,
+                                                                                                                                                            AffectsRender = true,
+                                                                                                                                                        });
+
+        public bool CloseFigure { get { return (bool)GetValue(CloseFigureProperty); } set { SetValue(CloseFigureProperty, value); } }
+        public static readonly DependencyProperty CloseFigureProperty = DependencyProperty.Register("CloseFigure", typeof(bool), typeof(ViewboxPolyline), new FrameworkPropertyMetadata
+                                                                                                                                                          {
+                                                                                                                                                              DefaultValue = false,
+                                                                                                                                                              PropertyChangedCallback = OnGeometryChanged,
+                                                                                                                                                              AffectsRender = true,
+                                                                                                                                                          });
+
+        protected override Geometry ComputeDefiningGeometry()
+        {
+            PointCollection points = Points;
+            if (points.Count < 2) return Geometry.Empty;
+
+            var geometry = new StreamGeometry { FillRule = FillRule };
+            using (var context = geometry.Open())
+            {
+                context.BeginFigure(Points[0], true, CloseFigure);
+                context.PolyLineTo(Points.Skip(1).ToList(), true, true);
+            }
+            return geometry;
+        }
+
+    }
+}

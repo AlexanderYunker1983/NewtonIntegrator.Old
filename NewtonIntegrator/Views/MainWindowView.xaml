@@ -1,0 +1,246 @@
+﻿<UserControl x:Class="NewtonIntegrator.Views.MainWindowView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DataContext="{d:DesignData MainWindowViewModel}">
+    <Grid Margin="11">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="0" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="MassGo" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="0" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Horb" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="0" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Velocity" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="1" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Jud1" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="1" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Jud2" UpdateSourceTrigger="PropertyChanged">
+                   
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="1" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Jud3" UpdateSourceTrigger="PropertyChanged">
+                   
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="2" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Nu1" UpdateSourceTrigger="PropertyChanged">
+                   
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="2" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Nu2" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="2" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Nu3" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="3" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Mu1" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="3" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Mu2" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="3" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Mu3" UpdateSourceTrigger="PropertyChanged">
+                   
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="4" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="G1" UpdateSourceTrigger="PropertyChanged">
+                   
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="4" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="G2" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="4" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="G3" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="5" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="A1" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="5" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="A2" UpdateSourceTrigger="PropertyChanged">
+                   
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="5" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="A3" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="6" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Lambda1" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="6" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Lambda2" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="6" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Muk3" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="7" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Lambda" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="7" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="Epsilon" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="7" Width="150" TextAlignment="Right" IsReadOnly="True">
+            <TextBox.Text>
+                <Binding Path="Delta" UpdateSourceTrigger="PropertyChanged">
+                    
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBlock Grid.Row="0" Grid.Column="0" Margin="5" Text="Мго, т"/>
+        <TextBlock Grid.Row="0" Grid.Column="2" Margin="5" Text="Норб, км"/>
+        <TextBlock Grid.Row="0" Grid.Column="4" Margin="5" Text="Vк, м/с"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="5" Text="Jуд1, м/с"/>
+        <TextBlock Grid.Row="1" Grid.Column="2" Margin="5" Text="Jуд2, м/с"/>
+        <TextBlock Grid.Row="1" Grid.Column="4" Margin="5" Text="Jуд3, м/с"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Margin="5" Text="v1"/>
+        <TextBlock Grid.Row="2" Grid.Column="2" Margin="5" Text="v2"/>
+        <TextBlock Grid.Row="2" Grid.Column="4" Margin="5" Text="v3"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Margin="5" Text="mпхо1, т/т"/>
+        <TextBlock Grid.Row="3" Grid.Column="2" Margin="5" Text="mпхо2, т/т"/>
+        <TextBlock Grid.Row="3" Grid.Column="4" Margin="5" Text="mпхо3, т/т"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Margin="5" Text="gду1 т/кН"/>
+        <TextBlock Grid.Row="4" Grid.Column="2" Margin="5" Text="gду2 т/кН"/>
+        <TextBlock Grid.Row="4" Grid.Column="4" Margin="5" Text="gду3 т/кН"/>
+        <TextBlock Grid.Row="5" Grid.Column="0" Margin="5" Text="as1"/>
+        <TextBlock Grid.Row="5" Grid.Column="2" Margin="5" Text="as2"/>
+        <TextBlock Grid.Row="5" Grid.Column="4" Margin="5" Text="as3"/>
+        <TextBlock Grid.Row="6" Grid.Column="0" Margin="5" Text="lambda1"/>
+        <TextBlock Grid.Row="6" Grid.Column="2" Margin="5" Text="lambda2"/>
+        <TextBlock Grid.Row="6" Grid.Column="4" Margin="5" Text="mk3"/>
+        <TextBlock Grid.Row="7" Grid.Column="0" Margin="5" Text="lambda"/>
+        <TextBlock Grid.Row="7" Grid.Column="2" Margin="5" Text="epsilon (порог)"/>
+        <TextBlock Grid.Row="7" Grid.Column="4" Margin="5" Text="epsilon (получено)"/>
+        <TextBlock Grid.Row="8" Grid.Column="0" Margin="5" Text="Вес 1-й ступени"/>
+        <TextBlock Grid.Row="8" Grid.Column="2" Margin="5" Text="Вес 2-й ступени"/>
+        <TextBlock Grid.Row="8" Grid.Column="4" Margin="5" Text="Вес 3-й ступени"/>
+        <TextBox Margin="5" Grid.Column="1" Grid.Row="8" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="M1" UpdateSourceTrigger="PropertyChanged">
+
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="3" Grid.Row="8" Width="150" TextAlignment="Right">
+            <TextBox.Text>
+                <Binding Path="M2" UpdateSourceTrigger="PropertyChanged">
+
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBox Margin="5" Grid.Column="5" Grid.Row="8" Width="150" TextAlignment="Right" IsReadOnly="True">
+            <TextBox.Text>
+                <Binding Path="M3" UpdateSourceTrigger="PropertyChanged">
+
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <Button Command="{Binding Start}" Grid.Column="5" Grid.Row="9" Content="Начать расчёт"/>
+    </Grid>
+</UserControl>

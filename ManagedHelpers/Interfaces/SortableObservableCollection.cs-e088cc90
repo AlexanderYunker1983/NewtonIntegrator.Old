@@ -1,0 +1,61 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Windows.Threading;
+
+namespace ManagedHelpers.Interfaces
+{
+    public class SortableObservableCollection<T> : ObservableCollection<T>
+        where T: IComparable<T>
+    {
+        public SortableObservableCollection(IEnumerable<T> list):base(list)
+        {
+            Dispatcher = Dispatcher.CurrentDispatcher;
+        }
+
+        protected Dispatcher Dispatcher { get; set; }
+
+        public void Sort(int index, int count, IComparer<T> comparer)
+        {
+            Dispatcher.Invoke((Action) (() => DefaultSort(index, count, comparer)));
+        }
+
+        private void DefaultSort(int index, int count, IComparer<T> comparer)
+        {
+            ((List<T>) Items).Sort(index, count, comparer);
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        public void Sort()
+        {
+            Sort(0, Count, null);
+        }
+
+        public void Sort(IComparer<T> comparer)
+        {
+            Sort(0, Count, comparer);
+        }
+
+        private bool isSorting;
+
+        public SortableObservableCollection()
+        {
+            Dispatcher = Dispatcher.CurrentDispatcher;
+        }
+
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            Dispatcher.Invoke((Action) (() =>
+                                            {
+                                                base.OnCollectionChanged(e);
+                                                if (!isSorting)
+                                                {
+                                                    isSorting = true;
+                                                    Sort();
+                                                    isSorting = false;
+                                                }
+                                            }));
+        }
+    }
+}
